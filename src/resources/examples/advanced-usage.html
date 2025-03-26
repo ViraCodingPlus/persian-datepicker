@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Datepicker - Advanced Usage Example</title>
+    
+    <!-- Add some basic styling -->
+    <link rel="stylesheet" href="../css/pdatepicker.css">
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+        .form-group {
+            margin: 0 10px 20px;
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .date-range {
+            display: flex;
+            align-items: center;
+        }
+        .date-range > div:first-child {
+            margin-left: 10px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+        .result.active {
+            display: block;
+        }
+        .result pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .validation-error {
+            color: #d9534f;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Persian Datepicker - Advanced Usage Examples</h1>
+        
+        <!-- Reservation Form Example -->
+        <div class="card">
+            <h2>رزرو هتل</h2>
+            <form id="hotel-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hotel-name">نام و نام خانوادگی:</label>
+                        <input type="text" id="hotel-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hotel-email">ایمیل:</label>
+                        <input type="email" id="hotel-email" name="email" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="checkin-date">تاریخ ورود:</label>
+                        <input type="text" id="checkin-date" name="checkin" placeholder="انتخاب تاریخ" required>
+                        <div class="validation-error" id="checkin-error">تاریخ ورود الزامی است</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkout-date">تاریخ خروج:</label>
+                        <input type="text" id="checkout-date" name="checkout" placeholder="انتخاب تاریخ" required>
+                        <div class="validation-error" id="checkout-error">تاریخ خروج الزامی است</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hotel-guests">تعداد مهمان:</label>
+                        <select id="hotel-guests" name="guests">
+                            <option value="1">1 نفر</option>
+                            <option value="2" selected>2 نفر</option>
+                            <option value="3">3 نفر</option>
+                            <option value="4">4 نفر</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hotel-room">نوع اتاق:</label>
+                        <select id="hotel-room" name="room_type">
+                            <option value="standard">استاندارد</option>
+                            <option value="deluxe">دیلوکس</option>
+                            <option value="suite">سوئیت</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hotel-notes">توضیحات:</label>
+                    <textarea id="hotel-notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit">ثبت رزرو</button>
+            </form>
+            
+            <div class="result" id="hotel-result">
+                <h3>اطلاعات رزرو:</h3>
+                <pre id="hotel-result-content"></pre>
+            </div>
+        </div>
+        
+        <!-- Date Range Picker Example -->
+        <div class="card">
+            <h2>گزارش‌گیری بر اساس تاریخ</h2>
+            
+            <form id="report-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>بازه زمانی:</label>
+                        <div class="date-range">
+                            <div>
+                                <input type="text" id="date-from" name="date_from" placeholder="از تاریخ" required>
+                                <div class="validation-error" id="date-from-error">تاریخ شروع الزامی است</div>
+                            </div>
+                            <div>تا</div>
+                            <div>
+                                <input type="text" id="date-to" name="date_to" placeholder="تا تاریخ" required>
+                                <div class="validation-error" id="date-to-error">تاریخ پایان الزامی است</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="report-type">نوع گزارش:</label>
+                        <select id="report-type" name="report_type">
+                            <option value="sales">فروش</option>
+                            <option value="inventory">موجودی</option>
+                            <option value="customer">مشتریان</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="report-format">فرمت خروجی:</label>
+                        <select id="report-format" name="format">
+                            <option value="pdf">PDF</option>
+                            <option value="excel">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit">دریافت گزارش</button>
+            </form>
+            
+            <div class="result" id="report-result">
+                <h3>جزئیات گزارش:</h3>
+                <pre id="report-result-content"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include Persian Datepicker JS -->
+    <script src="../js/pdatepicker.js"></script>
+    
+    <!-- Initialize datepickers and handle forms -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize hotel reservation datepickers
+            const today = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(today.getDate() + 1);
+            
+            // Convert to Jalali dates
+            const checkInPicker = new PDatepicker('#checkin-date', {
+                initialValue: formatJalaliDate(today),
+                onSelect: function(formattedDate) {
+                    // Update checkout min date when checkin changes
+                    const selectedDate = parseJalaliDate(formattedDate);
+                    const nextDay = new Date(selectedDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    
+                    checkOutPicker.options.minDate = formatJalaliDate(nextDay);
+                }
+            });
+            
+            const checkOutPicker = new PDatepicker('#checkout-date', {
+                initialValue: formatJalaliDate(tomorrow),
+                minDate: formatJalaliDate(tomorrow)
+            });
+            
+            // Initialize report date pickers
+            const fromPicker = new PDatepicker('#date-from', {
+                initialValue: getFirstDayOfMonth(),
+                onSelect: function(formattedDate) {
+                    // Update to-date min date when from-date changes
+                    toPicker.options.minDate = formattedDate;
+                }
+            });
+            
+            const toPicker = new PDatepicker('#date-to', {
+                initialValue: getLastDayOfMonth(),
+                minDate: getFirstDayOfMonth()
+            });
+            
+            // Handle hotel form submission
+            document.getElementById('hotel-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Basic validation
+                let isValid = true;
+                
+                if (!document.getElementById('checkin-date').value) {
+                    document.getElementById('checkin-error').style.display = 'block';
+                    isValid = false;
+                } else {
+                    document.getElementById('checkin-error').style.display = 'none';
+                }
+                
+                if (!document.getElementById('checkout-date').value) {
+                    document.getElementById('checkout-error').style.display = 'block';
+                    isValid = false;
+                } else {
+                    document.getElementById('checkout-error').style.display = 'none';
+                }
+                
+                if (isValid) {
+                    // Get form data
+                    const formData = new FormData(this);
+                    const formDataObj = {};
+                    
+                    formData.forEach((value, key) => {
+                        formDataObj[key] = value;
+                    });
+                    
+                    // Show result
+                    document.getElementById('hotel-result').classList.add('active');
+                    document.getElementById('hotel-result-content').textContent = JSON.stringify(formDataObj, null, 2);
+                }
+            });
+            
+            // Handle report form submission
+            document.getElementById('report-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Basic validation
+                let isValid = true;
+                
+                if (!document.getElementById('date-from').value) {
+                    document.getElementById('date-from-error').style.display = 'block';
+                    isValid = false;
+                } else {
+                    document.getElementById('date-from-error').style.display = 'none';
+                }
+                
+                if (!document.getElementById('date-to').value) {
+                    document.getElementById('date-to-error').style.display = 'block';
+                    isValid = false;
+                } else {
+                    document.getElementById('date-to-error').style.display = 'none';
+                }
+                
+                if (isValid) {
+                    // Get form data
+                    const formData = new FormData(this);
+                    const formDataObj = {};
+                    
+                    formData.forEach((value, key) => {
+                        formDataObj[key] = value;
+                    });
+                    
+                    // Show result
+                    document.getElementById('report-result').classList.add('active');
+                    document.getElementById('report-result-content').textContent = JSON.stringify(formDataObj, null, 2);
+                }
+            });
+            
+            // Helper functions
+            function formatJalaliDate(date) {
+                // This is a simplified version - in a real app, you'd use a proper conversion
+                const jalaliDate = new PDatepicker().getJalaliDate(date);
+                return `${jalaliDate.year}/${jalaliDate.month}/${jalaliDate.day}`;
+            }
+            
+            function parseJalaliDate(jalaliDateStr) {
+                // This is a simplified version - in a real app, you'd use a proper conversion
+                // Here we just return the current date as a placeholder
+                return new Date();
+            }
+            
+            function getFirstDayOfMonth() {
+                // Get first day of current Jalali month
+                const today = new PDatepicker().getJalaliDate(new Date());
+                return `${today.year}/${today.month}/1`;
+            }
+            
+            function getLastDayOfMonth() {
+                // Get last day of current Jalali month (simplified)
+                const today = new PDatepicker().getJalaliDate(new Date());
+                const daysInMonth = today.month <= 6 ? 31 : (today.month <= 11 ? 30 : 29);
+                return `${today.year}/${today.month}/${daysInMonth}`;
+            }
+        });
+    </script>
+</body>
+</html> 
