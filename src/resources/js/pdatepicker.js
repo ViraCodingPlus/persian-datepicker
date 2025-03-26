@@ -152,7 +152,19 @@ class PDatepicker {
                 'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
                 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
             ];
-            this.today = this.getJalaliDate(new Date());
+            
+            // Create today's date with fallback values in case getJalaliDate fails
+            try {
+                this.today = this.getJalaliDate(new Date());
+                // Ensure today has all required properties
+                if (!this.today || typeof this.today.year === 'undefined') {
+                    console.warn('PDatepicker: Failed to get Jalali date, using fallback values');
+                    this.today = { year: 1402, month: 1, day: 1 };
+                }
+            } catch (error) {
+                console.error('PDatepicker: Error in getJalaliDate', error);
+                this.today = { year: 1402, month: 1, day: 1 };
+            }
         } else {
             this.dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
             this.monthNames = [
@@ -166,8 +178,8 @@ class PDatepicker {
             };
         }
         
-        // Set current view date
-        this.currentViewDate = { ...this.today };
+        // Set current view date with a safety check
+        this.currentViewDate = this.today ? { ...this.today } : { year: 1402, month: 1, day: 1 };
     }
 
     /**
@@ -194,6 +206,13 @@ class PDatepicker {
      */
     renderDaysView() {
         this.options.viewMode = 'day';
+        
+        // Safety check to prevent undefined errors
+        if (!this.currentViewDate) {
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
+            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+        }
+        
         const year = this.currentViewDate.year;
         const month = this.currentViewDate.month;
         
@@ -248,6 +267,13 @@ class PDatepicker {
      */
     renderMonthsView() {
         this.options.viewMode = 'month';
+        
+        // Safety check to prevent undefined errors
+        if (!this.currentViewDate) {
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
+            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+        }
+        
         const year = this.currentViewDate.year;
         
         // Update title
@@ -284,6 +310,13 @@ class PDatepicker {
      */
     renderYearsView() {
         this.options.viewMode = 'year';
+        
+        // Safety check to prevent undefined errors
+        if (!this.currentViewDate) {
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
+            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+        }
+        
         const year = this.currentViewDate.year;
         const startYear = Math.floor(year / 12) * 12;
         const endYear = startYear + 11;
