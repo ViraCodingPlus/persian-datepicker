@@ -65,11 +65,13 @@ class PDatepicker
         $language = $options['language'] ?? config('pdatepicker.language', 'fa');
         $autoClose = $options['autoClose'] ?? config('pdatepicker.autoClose', true);
         $timePicker = $options['timePicker'] ?? config('pdatepicker.timePicker', false);
+        $timeFormat = $options['timeFormat'] ?? config('pdatepicker.timeFormat', 'HH:mm:ss');
+        $type = $options['type'] ?? config('pdatepicker.type', 'date');
         $viewMode = $options['viewMode'] ?? config('pdatepicker.viewMode', 'day');
         
         $attributes = '';
         foreach ($options as $key => $value) {
-            if (!in_array($key, ['id', 'class', 'placeholder', 'format', 'theme', 'rtl', 'language', 'autoClose', 'timePicker', 'viewMode'])) {
+            if (!in_array($key, ['id', 'class', 'placeholder', 'format', 'theme', 'rtl', 'language', 'autoClose', 'timePicker', 'timeFormat', 'type', 'viewMode', 'customStyles'])) {
                 $attributes .= $key . '="' . $value . '" ';
             }
         }
@@ -84,7 +86,23 @@ class PDatepicker
                     language: "' . $language . '",
                     autoClose: ' . ($autoClose ? 'true' : 'false') . ',
                     timePicker: ' . ($timePicker ? 'true' : 'false') . ',
-                    viewMode: "' . $viewMode . '"
+                    timeFormat: "' . $timeFormat . '",
+                    type: "' . $type . '",
+                    viewMode: "' . $viewMode . '"';
+        
+        // Add customStyles if provided
+        if (isset($options['customStyles']) && is_array($options['customStyles'])) {
+            $html .= ',
+                    customStyles: ' . json_encode($options['customStyles']);
+        }
+        
+        // Add initialValue if provided
+        if (isset($value) && !empty($value)) {
+            $html .= ',
+                    initialValue: "' . $value . '"';
+        }
+        
+        $html .= '
                 });
             });
         </script>';
