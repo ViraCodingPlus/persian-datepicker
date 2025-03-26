@@ -1,7 +1,19 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "pdatepicker/persian-datepicker",
-    "description": "A Persian (Jalali) datepicker package for Laravel",
+    "description": "A modern Persian (Jalali) datepicker package for Laravel applications with customizable themes and extensive options",
+    "keywords": [
+        "laravel",
+        "persian",
+        "jalali",
+        "datepicker",
+        "calendar",
+        "date-picker",
+        "timepicker",
+        "persian-calendar",
+        "jalali-calendar",
+        "rtl"
+    ],
     "type": "library",
     "license": "MIT",
     "authors": [

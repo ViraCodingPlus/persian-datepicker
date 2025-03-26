@@ -66,6 +66,31 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Time Format
+    |--------------------------------------------------------------------------
+    |
+    | Format for displaying time when time picker is enabled.
+    | Available formats: 'HH:mm:ss', 'HH:mm', 'hh:mm A'
+    |
+    */
+    'timeFormat' => 'HH:mm:ss',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Calendar Type
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the type of calendar to display.
+    | Available types: 'date', 'month', 'year'
+    | - 'date': Full calendar with day, month, and year selection (default)
+    | - 'month': Only month and year selection
+    | - 'year': Only year selection
+    |
+    */
+    'type' => 'date',
+
+    /*
+    |--------------------------------------------------------------------------
     | Default View
     |--------------------------------------------------------------------------
     |
