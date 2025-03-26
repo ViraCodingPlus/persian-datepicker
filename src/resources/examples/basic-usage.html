@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Persian Datepicker - Basic Usage Example</title>
-    
+    <link rel="preconnect" href="//fdn.fontcdn.ir"><link rel="preconnect" href="//v1.fontapi.ir"><link href="https://v1.fontapi.ir/css/Vazir" rel="stylesheet">
     <!-- Add some basic styling -->
     <link rel="stylesheet" href="../css/pdatepicker.css">
     <style>
         body {
-            font-family: Tahoma, Arial, sans-serif;
+            font-family: Vazir, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
@@ -60,6 +60,32 @@
             padding: 15px;
             border-radius: 5px;
             overflow-x: auto;
+            direction: ltr;
+        }
+        .update-styles-btn {
+            background-color: #4a6bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .update-styles-btn:hover {
+            background-color: #3451db;
+        }
+        .custom-styles-section {
+            border-left: 4px solid #4a6bff;
+        }
+        #date8 {
+            border: 2px solid #4a6bff;
+            transition: border-color 0.3s ease;
+        }
+        #date8:focus {
+            outline: none;
+            border-color: #3451db;
         }
     </style>
 </head>
@@ -123,7 +149,8 @@
             </div>
             <pre><code>new PDatepicker('#date5', {
     timePicker: true,
-    format: 'YYYY/MM/DD HH:mm'
+    format: 'YYYY/MM/DD',
+    timeFormat:'HH:mm:ss'
 });</code></pre>
         </div>
         
@@ -161,6 +188,90 @@
     }
 });</code></pre>
         </div>
+        
+        <!-- Custom Styles Example -->
+        <div class="example-section custom-styles-section">
+            <h2>Custom Styles</h2>
+            <div class="form-group">
+                <label for="date8">تاریخ با استایل سفارشی:</label>
+                <input type="text" id="date8" placeholder="انتخاب تاریخ">
+            </div>
+            <pre><code>new PDatepicker('#date8', {
+    customStyles: {
+        container: {
+            borderRadius: '15px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+            fontFamily: 'Vazir, sans-serif'
+        },
+        header: {
+            backgroundColor: '#4a6bff',
+            color: 'white',
+            padding: '15px'
+        },
+        title: {
+            fontSize: '16px',
+            fontWeight: 'bold'
+        },
+        day: {
+            borderRadius: '50%',
+            transition: 'all 0.2s ease'
+        },
+        todayBtn: {
+            backgroundColor: '#4a6bff',
+            color: 'white',
+            border: 'none',
+            padding: '8px 15px',
+            borderRadius: '5px'
+        },
+        weekday: {
+            fontWeight: 'bold',
+            color: '#555'
+        },
+        // Style for weekend days (Friday/ج)
+        'day.pdatepicker-weekend-day': {
+            color: '#ff5252',
+            fontWeight: 'bold'
+        },
+        // Time picker styling
+        timePicker: {
+            borderTop: '2px solid #4a6bff',
+            padding: '15px 10px'
+        },
+        timeValue: {
+            fontWeight: 'bold',
+            color: '#4a6bff'
+        },
+        timeButton: {
+            backgroundColor: '#f0f5ff',
+            borderRadius: '50%',
+            width: '30px',
+            height: '30px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            margin: '3px auto'
+        }
+    }
+});</code></pre>
+            <div class="form-group">
+                <button id="update_styles" class="update-styles-btn">تغییر استایل در زمان اجرا</button>
+            </div>
+            <pre><code>// Update styles dynamically
+document.getElementById('update_styles').addEventListener('click', function() {
+    datepicker8.updateStyles({
+        header: {
+            backgroundColor: '#ff5722',
+            color: 'white'
+        },
+        todayBtn: {
+            backgroundColor: '#ff5722',
+            color: 'white'
+        }
+    });
+});</code></pre>
+        </div>
+
+       
     </div>
     
     <!-- Include Persian Datepicker JS -->
@@ -190,7 +301,8 @@
             // Time picker
             new PDatepicker('#date5', {
                 timePicker: true,
-                format: 'YYYY/MM/DD HH:mm'
+                format: 'YYYY/MM/DD',
+                timeFormat: 'HH:mm:ss'
             });
             
             // Alternate field
@@ -203,6 +315,108 @@
             new PDatepicker('#date7', {
                 onSelect: function(formattedDate, dateStr) {
                     document.getElementById('date7_result').textContent = 'تاریخ انتخاب شده: ' + dateStr;
+                }
+            });
+            
+            // Custom styles
+            const datepicker8 = new PDatepicker('#date8', {
+                customStyles: {
+                    container: {
+                        borderRadius: '15px',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+                        fontFamily: 'Vazir, sans-serif'
+                    },
+                    header: {
+                        backgroundColor: '#4a6bff',
+                        color: 'white',
+                        padding: '15px'
+                    },
+                    title: {
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                    },
+                    day: {
+                        borderRadius: '50%',
+                        transition: 'all 0.2s ease'
+                    },
+                    todayBtn: {
+                        backgroundColor: '#4a6bff',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 15px',
+                        borderRadius: '5px'
+                    },
+                    weekday: {
+                        fontWeight: 'bold',
+                        color: '#555'
+                    },
+                    // Style for weekend days (Friday/ج)
+                    'day.pdatepicker-weekend-day': {
+                        color: '#ff5252',
+                        fontWeight: 'bold'
+                    },
+                    // Time picker styling
+                    timePicker: {
+                        borderTop: '2px solid #4a6bff',
+                        padding: '15px 10px'
+                    },
+                    timeValue: {
+                        fontWeight: 'bold',
+                        color: '#4a6bff'
+                    },
+                    timeButton: {
+                        backgroundColor: '#f0f5ff',
+                        borderRadius: '50%',
+                        width: '30px',
+                        height: '30px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        margin: '3px auto'
+                    }
+                }
+            });
+            
+            // Update styles button
+            document.getElementById('update_styles').addEventListener('click', function() {
+                datepicker8.updateStyles({
+                    header: {
+                        backgroundColor: '#ff5722',
+                        color: 'white'
+                    },
+                    todayBtn: {
+                        backgroundColor: '#ff5722',
+                        color: 'white'
+                    }
+                });
+            });
+
+            // Time Picker Options Examples
+            // 24-hour format example
+            new pDatepicker({
+                selector: '.timepicker-24h',
+                timePicker: {
+                    enabled: true,
+                    timeFormat: 'HH:mm'  // 24-hour format
+                }
+            });
+
+            // 12-hour format example with AM/PM
+            new pDatepicker({
+                selector: '.timepicker-12h',
+                timePicker: {
+                    enabled: true,
+                    timeFormat: 'hh:mm A'  // 12-hour format with AM/PM
+                }
+            });
+
+            // Time only picker
+            new pDatepicker({
+                selector: '.time-only-picker',
+                onlyTimePicker: true,
+                timePicker: {
+                    enabled: true,
+                    timeFormat: 'HH:mm'
                 }
             });
         });

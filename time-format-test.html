@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDatepicker Time Format Test</title>
+    <link rel="stylesheet" href="src/resources/css/pdatepicker.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        .format-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDatepicker Time Format Test</h1>
+        
+        <h2>Different Time Formats</h2>
+        
+        <div class="form-group">
+            <label for="date1">Standard Format with HH:mm:ss</label>
+            <input type="text" id="date1" placeholder="Select date and time">
+            <div class="format-info">Time Format: HH:mm:ss</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="date2">Hours and Minutes Only (HH:mm)</label>
+            <input type="text" id="date2" placeholder="Select date and time">
+            <div class="format-info">Time Format: HH:mm</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="date3">12-hour Format with AM/PM</label>
+            <input type="text" id="date3" placeholder="Select date and time">
+            <div class="format-info">Time Format: h:mm A (Custom)</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="date4">Custom Format with Text (at HH:mm)</label>
+            <input type="text" id="date4" placeholder="Select date and time">
+            <div class="format-info">Time Format: 'at' HH:mm</div>
+        </div>
+    </div>
+    
+    <script src="src/resources/js/pdatepicker.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Standard time format (HH:mm:ss)
+            const datepicker1 = new PDatepicker('#date1', {
+                language: 'fa',
+                format: 'YYYY/MM/DD',
+                timePicker: true,
+                timeFormat: 'HH:mm:ss'
+            });
+            
+            // Hours and minutes only (HH:mm)
+            const datepicker2 = new PDatepicker('#date2', {
+                language: 'fa',
+                format: 'YYYY/MM/DD',
+                timePicker: true,
+                timeFormat: 'HH:mm'
+            });
+            
+            // 12-hour format with AM/PM
+            const datepicker3 = new PDatepicker('#date3', {
+                language: 'en',
+                rtl: false,
+                format: 'MM/DD/YYYY',
+                timePicker: true,
+                timeFormat: 'h:mm A'
+            });
+            
+            // Custom format with text
+            const datepicker4 = new PDatepicker('#date4', {
+                language: 'en',
+                rtl: false,
+                format: 'YYYY-MM-DD',
+                timePicker: true,
+                timeFormat: 'at HH:mm'
+            });
+            
+            console.log('All datepickers initialized');
+        });
+    </script>
+</body>
+</html> 

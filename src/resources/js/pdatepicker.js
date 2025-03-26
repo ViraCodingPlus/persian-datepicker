@@ -22,6 +22,7 @@ class PDatepicker {
             language: 'fa',
             autoClose: true,
             timePicker: false,
+            timeFormat: 'HH:mm:ss', // Format for time display
             viewMode: 'day',
             minDate: null,
             maxDate: null,
@@ -31,7 +32,8 @@ class PDatepicker {
             altFormat: null,
             onSelect: null,
             onShow: null,
-            onHide: null
+            onHide: null,
+            customStyles: {}, // Custom CSS styles for datepicker elements
         };
 
         // Merge options
@@ -50,6 +52,11 @@ class PDatepicker {
         // Initialize days, months and years names based on language
         this.initializeCalendarNames();
 
+        // Initialize time picker if enabled
+        if (this.options.timePicker) {
+            this.initializeTimePicker();
+        }
+
         // Attach event listeners
         this.attachEventListeners();
 
@@ -57,6 +64,86 @@ class PDatepicker {
         if (this.options.initialValue) {
             this.setDate(this.options.initialValue);
         }
+    }
+
+    /**
+     * Apply custom styles to datepicker elements
+     */
+    applyCustomStyles() {
+        const customStyles = this.options.customStyles;
+        
+        // Skip if no custom styles are defined
+        if (!customStyles || Object.keys(customStyles).length === 0) {
+            return;
+        }
+        
+        // Apply styles to container
+        if (customStyles.container) {
+            this.applyStyles(this.container, customStyles.container);
+        }
+        
+        // Apply styles to header and its elements
+        if (customStyles.header) {
+            this.applyStyles(this.header, customStyles.header);
+        }
+        
+        if (customStyles.title) {
+            this.applyStyles(this.title, customStyles.title);
+        }
+        
+        if (customStyles.prevBtn) {
+            this.applyStyles(this.prevBtn, customStyles.prevBtn);
+        }
+        
+        if (customStyles.nextBtn) {
+            this.applyStyles(this.nextBtn, customStyles.nextBtn);
+        }
+        
+        // Apply styles to body
+        if (customStyles.body) {
+            this.applyStyles(this.body, customStyles.body);
+        }
+        
+        // Apply styles to footer and today button
+        if (customStyles.footer) {
+            this.applyStyles(this.footer, customStyles.footer);
+        }
+        
+        if (customStyles.todayBtn) {
+            this.applyStyles(this.todayBtn, customStyles.todayBtn);
+        }
+        
+        // Apply styles to time picker if enabled
+        if (this.options.timePicker && this.timePicker) {
+            if (customStyles.timePicker) {
+                this.applyStyles(this.timePicker, customStyles.timePicker);
+            }
+            
+            // Apply styles to specific time picker elements
+            if (customStyles.timeValue) {
+                const timeValues = this.timePicker.querySelectorAll('.pdatepicker-time-value');
+                timeValues.forEach(element => this.applyStyles(element, customStyles.timeValue));
+            }
+            
+            if (customStyles.timeButton) {
+                const timeButtons = this.timePicker.querySelectorAll('.pdatepicker-time-up, .pdatepicker-time-down');
+                timeButtons.forEach(element => this.applyStyles(element, customStyles.timeButton));
+            }
+        }
+    }
+    
+    /**
+     * Apply CSS styles to an element
+     * 
+     * @param {HTMLElement} element The element to style
+     * @param {object} styles Object containing CSS styles
+     */
+    applyStyles(element, styles) {
+        if (!element || !styles) return;
+        
+        Object.keys(styles).forEach(property => {
+            element.style[property] = styles[property];
+        });
     }
 
     /**
@@ -113,6 +200,12 @@ class PDatepicker {
                         <span class="pdatepicker-time-value">00</span>
                         <button class="pdatepicker-time-down">-</button>
                     </div>
+                    <div class="pdatepicker-time-separator">:</div>
+                    <div class="pdatepicker-time-seconds">
+                        <button class="pdatepicker-time-up">+</button>
+                        <span class="pdatepicker-time-value">00</span>
+                        <button class="pdatepicker-time-down">-</button>
+                    </div>
                 </div>
             `;
         }
@@ -138,6 +231,9 @@ class PDatepicker {
         // Append to document body
         document.body.appendChild(this.container);
         
+        // Apply custom styles if defined
+        this.applyCustomStyles();
+        
         // Initialize calendar (default view)
         this.initializeCalendar();
     }
@@ -153,17 +249,20 @@ class PDatepicker {
                 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
             ];
             
-            // Create today's date with fallback values in case getJalaliDate fails
+            // Create today's date with fallback values based on current date if getJalaliDate fails
             try {
-                this.today = this.getJalaliDate(new Date());
+                const now = new Date();
+                this.today = this.getJalaliDate(now);
                 // Ensure today has all required properties
                 if (!this.today || typeof this.today.year === 'undefined') {
-                    console.warn('PDatepicker: Failed to get Jalali date, using fallback values');
-                    this.today = { year: 1402, month: 1, day: 1 };
+                    console.warn('PDatepicker: Failed to get Jalali date, using current date as fallback');
+                    this.today = this.getJalaliDate(new Date());
                 }
             } catch (error) {
                 console.error('PDatepicker: Error in getJalaliDate', error);
-                this.today = { year: 1402, month: 1, day: 1 };
+                // Use current date as fallback
+                const now = new Date();
+                this.today = this.getJalaliDate(now);
             }
         } else {
             this.dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -179,7 +278,12 @@ class PDatepicker {
         }
         
         // Set current view date with a safety check
-        this.currentViewDate = this.today ? { ...this.today } : { year: 1402, month: 1, day: 1 };
+        this.currentViewDate = this.today ? { ...this.today } : this.getJalaliDate(new Date());
+        
+        // Ensure currentViewDate has a day property set
+        if (!this.currentViewDate.day) {
+            this.currentViewDate.day = 1;
+        }
     }
 
     /**
@@ -209,8 +313,14 @@ class PDatepicker {
         
         // Safety check to prevent undefined errors
         if (!this.currentViewDate) {
-            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
-            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with current date');
+            this.currentViewDate = this.options.language === 'fa' 
+                ? this.getJalaliDate(new Date()) 
+                : {
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth() + 1,
+                    day: new Date().getDate()
+                };
         }
         
         // Safety check for dayNames
@@ -269,35 +379,75 @@ class PDatepicker {
         // Create calendar grid
         let html = '<div class="pdatepicker-days">';
         html += '<div class="pdatepicker-week-days">';
+        
+        // Create week days and add to DOM directly for better styling support
+        this.body.innerHTML = '';
+        const weekDaysContainer = document.createElement('div');
+        weekDaysContainer.className = 'pdatepicker-week-days';
+        
         for (let i = 0; i < 7; i++) {
             const dayName = i < this.dayNames.length ? this.dayNames[i] : `D${i}`;
-            html += `<div class="pdatepicker-week-day">${dayName}</div>`;
+            // Add special class for Friday (ج) in Persian calendar
+            const isWeekend = (this.options.language === 'fa' && dayName === 'ج') || 
+                            (this.options.language !== 'fa' && (dayName === 'Fr' || dayName === 'Sa'));
+            
+            const weekdayEl = document.createElement('div');
+            weekdayEl.className = isWeekend ? 'pdatepicker-week-day pdatepicker-weekend-day' : 'pdatepicker-week-day';
+            weekdayEl.textContent = dayName;
+            
+            // Apply custom styles to week day
+            this.applyDynamicStyles('weekday', weekdayEl);
+            
+            weekDaysContainer.appendChild(weekdayEl);
         }
-        html += '</div>';
         
-        html += '<div class="pdatepicker-days-grid">';
-        days.forEach(day => {
+        const daysContainer = document.createElement('div');
+        daysContainer.className = 'pdatepicker-days';
+        daysContainer.appendChild(weekDaysContainer);
+        
+        // Create days grid
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'pdatepicker-days-grid';
+        
+        days.forEach((day, index) => {
             let classes = ['pdatepicker-day'];
             if (day.current) classes.push('pdatepicker-day-current');
             if (day.today) classes.push('pdatepicker-day-today');
             if (day.selected) classes.push('pdatepicker-day-selected');
-            if (!day.current) classes.push('pdatepicker-day-other-month');
+            if (!day.current) {
+                classes.push('pdatepicker-day-other-month');
+                classes.push('pdatepicker-day-disabled'); // Add disabled class for non-current month days
+            }
             
-            html += `<div class="${classes.join(' ')}" data-date="${day.year}/${day.month}/${day.day}">${day.day}</div>`;
+            // Add weekend class for Persian Friday (index % 7 = 6) or English Saturday/Sunday
+            if (this.options.language === 'fa' && index % 7 === 6) {
+                classes.push('pdatepicker-weekend-day');
+            } else if (this.options.language !== 'fa' && (index % 7 === 0 || index % 7 === 6)) {
+                classes.push('pdatepicker-weekend-day');
+            }
+            
+            const dayEl = document.createElement('div');
+            dayEl.className = classes.join(' ');
+            dayEl.dataset.date = `${day.year}/${day.month}/${day.day}`;
+            dayEl.textContent = day.day;
+            
+            // Apply custom styles to day
+            this.applyDynamicStyles('day', dayEl);
+            
+            if (!dayEl.classList.contains('pdatepicker-day-disabled')) {
+                dayEl.addEventListener('click', () => {
+                    this.selectDate(dayEl.dataset.date);
+                });
+            } else {
+                // Make non-current month days non-clickable
+                dayEl.style.cursor = 'default';
+            }
+            
+            daysGrid.appendChild(dayEl);
         });
-        html += '</div>';
-        html += '</div>';
         
-        // Update body
-        this.body.innerHTML = html;
-        
-        // Attach click events to days
-        const dayElements = this.body.querySelectorAll('.pdatepicker-day');
-        dayElements.forEach(day => {
-            day.addEventListener('click', () => {
-                this.selectDate(day.dataset.date);
-            });
-        });
+        daysContainer.appendChild(daysGrid);
+        this.body.appendChild(daysContainer);
     }
 
     /**
@@ -308,8 +458,14 @@ class PDatepicker {
         
         // Safety check to prevent undefined errors
         if (!this.currentViewDate) {
-            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
-            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with current date');
+            this.currentViewDate = this.options.language === 'fa' 
+                ? this.getJalaliDate(new Date()) 
+                : {
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth() + 1,
+                    day: new Date().getDate()
+                };
         }
         
         // Safety check for monthNames
@@ -334,8 +490,13 @@ class PDatepicker {
         this.title.textContent = year;
         this.title.dataset.year = year;
         
-        // Create months grid
-        let html = '<div class="pdatepicker-months">';
+        // Clear body
+        this.body.innerHTML = '';
+        
+        // Create months container
+        const monthsContainer = document.createElement('div');
+        monthsContainer.className = 'pdatepicker-months';
+        
         for (let i = 0; i < 12; i++) {
             let classes = ['pdatepicker-month'];
             if (i + 1 === this.currentViewDate.month && year === this.currentViewDate.year) {
@@ -344,21 +505,43 @@ class PDatepicker {
             
             // Safety check for month index bounds
             const monthName = i < this.monthNames.length ? this.monthNames[i] : `Month ${i+1}`;
-            html += `<div class="${classes.join(' ')}" data-month="${i + 1}">${monthName}</div>`;
-        }
-        html += '</div>';
-        
-        // Update body
-        this.body.innerHTML = html;
-        
-        // Attach click events to months
-        const monthElements = this.body.querySelectorAll('.pdatepicker-month');
-        monthElements.forEach(month => {
-            month.addEventListener('click', () => {
-                this.currentViewDate.month = parseInt(month.dataset.month);
+            
+            const monthEl = document.createElement('div');
+            monthEl.className = classes.join(' ');
+            monthEl.dataset.month = i + 1;
+            monthEl.textContent = monthName;
+            
+            // Apply custom styles to month
+            this.applyDynamicStyles('month', monthEl);
+            
+            monthEl.addEventListener('click', () => {
+                // Update the currentViewDate month
+                this.currentViewDate.month = parseInt(monthEl.dataset.month);
+                
+                // Update the date with the new month
+                if (this.input.value) {
+                    // Keep the same year and day, just change the month
+                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                    this.selectDate(dateStr);
+                } else {
+                    // If no date is selected yet, set the first day of the selected month
+                    // Make sure the day is set
+                    if (!this.currentViewDate.day) {
+                        this.currentViewDate.day = 1;
+                    }
+                    
+                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                    this.selectDate(dateStr);
+                }
+                
+                // Switch to days view
                 this.renderDaysView();
             });
-        });
+            
+            monthsContainer.appendChild(monthEl);
+        }
+        
+        this.body.appendChild(monthsContainer);
     }
 
     /**
@@ -369,8 +552,14 @@ class PDatepicker {
         
         // Safety check to prevent undefined errors
         if (!this.currentViewDate) {
-            console.warn('PDatepicker: currentViewDate is undefined, initializing with defaults');
-            this.currentViewDate = { year: 1402, month: 1, day: 1 };
+            console.warn('PDatepicker: currentViewDate is undefined, initializing with current date');
+            this.currentViewDate = this.options.language === 'fa' 
+                ? this.getJalaliDate(new Date()) 
+                : {
+                    year: new Date().getFullYear(),
+                    month: new Date().getMonth() + 1,
+                    day: new Date().getDate()
+                };
         }
         
         const year = this.currentViewDate.year;
@@ -380,29 +569,55 @@ class PDatepicker {
         // Update title
         this.title.textContent = `${startYear} - ${endYear}`;
         
-        // Create years grid
-        let html = '<div class="pdatepicker-years">';
+        // Clear body
+        this.body.innerHTML = '';
+        
+        // Create years container
+        const yearsContainer = document.createElement('div');
+        yearsContainer.className = 'pdatepicker-years';
+        
         for (let i = startYear; i <= endYear; i++) {
             let classes = ['pdatepicker-year'];
             if (i === this.currentViewDate.year) {
                 classes.push('pdatepicker-year-selected');
             }
             
-            html += `<div class="${classes.join(' ')}" data-year="${i}">${i}</div>`;
-        }
-        html += '</div>';
-        
-        // Update body
-        this.body.innerHTML = html;
-        
-        // Attach click events to years
-        const yearElements = this.body.querySelectorAll('.pdatepicker-year');
-        yearElements.forEach(yearEl => {
+            const yearEl = document.createElement('div');
+            yearEl.className = classes.join(' ');
+            yearEl.dataset.year = i;
+            yearEl.textContent = i;
+            
+            // Apply custom styles to year
+            this.applyDynamicStyles('year', yearEl);
+            
             yearEl.addEventListener('click', () => {
+                // Update the currentViewDate year
                 this.currentViewDate.year = parseInt(yearEl.dataset.year);
+                
+                // Update the date with the new year
+                if (this.input.value) {
+                    // Keep the same month and day, just change the year
+                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                    this.selectDate(dateStr);
+                } else {
+                    // If no date is selected yet, set the first day of the selected year/month
+                    // Make sure the day is set
+                    if (!this.currentViewDate.day) {
+                        this.currentViewDate.day = 1;
+                    }
+                    
+                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                    this.selectDate(dateStr);
+                }
+                
+                // Switch to months view
                 this.renderMonthsView();
             });
-        });
+            
+            yearsContainer.appendChild(yearEl);
+        }
+        
+        this.body.appendChild(yearsContainer);
     }
 
     /**
@@ -447,6 +662,29 @@ class PDatepicker {
         
         // Today button click
         this.todayBtn.addEventListener('click', () => {
+            // Ensure this.today is defined
+            if (!this.today) {
+                if (this.options.language === 'fa') {
+                    try {
+                        this.today = this.getJalaliDate(new Date());
+                        if (!this.today || typeof this.today.year === 'undefined') {
+                            // Get current date as fallback
+                            this.today = this.getJalaliDate(new Date());
+                        }
+                    } catch (error) {
+                        console.error('PDatepicker: Error getting Jalali date', error);
+                        // Get current date as fallback
+                        this.today = this.getJalaliDate(new Date());
+                    }
+                } else {
+                    this.today = {
+                        year: new Date().getFullYear(),
+                        month: new Date().getMonth() + 1,
+                        day: new Date().getDate()
+                    };
+                }
+            }
+            
             this.currentViewDate = { ...this.today };
             this.renderDaysView();
             this.selectDate(`${this.today.year}/${this.today.month}/${this.today.day}`);
@@ -533,6 +771,44 @@ class PDatepicker {
     }
 
     /**
+     * Format time according to specified format
+     * 
+     * @param {number} hours Hours
+     * @param {number} minutes Minutes
+     * @param {number} seconds Seconds
+     * @param {string} format Format string
+     * @returns {string} Formatted time
+     */
+    formatTime(hours, minutes, seconds, format) {
+        const hoursStr = hours.toString().padStart(2, '0');
+        const minutesStr = minutes.toString().padStart(2, '0');
+        const secondsStr = seconds.toString().padStart(2, '0');
+        
+        // 12-hour format variables
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const hours12 = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+        const hours12Str = hours12.toString().padStart(2, '0');
+        
+        let result = format
+            // 24-hour format
+            .replace(/HH/g, hoursStr)
+            .replace(/H/g, hours.toString())
+            // 12-hour format
+            .replace(/hh/g, hours12Str)
+            .replace(/h/g, hours12.toString())
+            // Minutes and seconds
+            .replace(/mm/g, minutesStr)
+            .replace(/m/g, minutes.toString())
+            .replace(/ss/g, secondsStr)
+            .replace(/s/g, seconds.toString())
+            // AM/PM indicators
+            .replace(/A/g, period)
+            .replace(/a/g, period.toLowerCase());
+            
+        return result;
+    }
+    
+    /**
      * Select a date
      * 
      * @param {string} date Date in format YYYY/MM/DD
@@ -547,8 +823,31 @@ class PDatepicker {
         this.currentViewDate.month = month;
         this.currentViewDate.day = day;
         
+        // Initialize time values if not set
+        if (this.options.timePicker && (!this.currentViewDate.hours || !this.currentViewDate.minutes || !this.currentViewDate.seconds)) {
+            const now = new Date();
+            this.currentViewDate.hours = now.getHours();
+            this.currentViewDate.minutes = now.getMinutes();
+            this.currentViewDate.seconds = now.getSeconds();
+            this.updateTimePickerDisplay();
+        }
+        
         // Format date according to options
         let formattedDate = this.formatDate(date, this.options.format);
+        
+        // Add time if timePicker is enabled
+        if (this.options.timePicker) {
+            // Format time according to timeFormat option
+            const timeStr = this.formatTime(
+                this.currentViewDate.hours,
+                this.currentViewDate.minutes,
+                this.currentViewDate.seconds,
+                this.options.timeFormat
+            );
+            
+            // Add time to formatted date
+            formattedDate += ` ${timeStr}`;
+        }
         
         // Set input value
         this.input.value = formattedDate;
@@ -558,7 +857,22 @@ class PDatepicker {
             const altField = document.querySelector(this.options.altField);
             if (altField) {
                 const altFormat = this.options.altFormat || this.options.format;
-                altField.value = this.formatDate(date, altFormat);
+                let altFormattedDate = this.formatDate(date, altFormat);
+                
+                // Add time if timePicker is enabled
+                if (this.options.timePicker) {
+                    // Format time according to timeFormat option
+                    const timeStr = this.formatTime(
+                        this.currentViewDate.hours,
+                        this.currentViewDate.minutes,
+                        this.currentViewDate.seconds,
+                        this.options.timeFormat
+                    );
+                    
+                    altFormattedDate += ` ${timeStr}`;
+                }
+                
+                altField.value = altFormattedDate;
             }
         }
         
@@ -576,8 +890,8 @@ class PDatepicker {
             this.options.onSelect(formattedDate, date);
         }
         
-        // Auto close if enabled
-        if (this.options.autoClose) {
+        // Auto close if enabled and time picker is not enabled
+        if (this.options.autoClose && !this.options.timePicker) {
             this.hide();
         }
     }
@@ -604,13 +918,15 @@ class PDatepicker {
         const month = parts[1];
         const day = parts[2];
         
-        return format
-            .replace('YYYY', year)
-            .replace('YY', year.slice(-2))
-            .replace('MM', month.toString().padStart(2, '0'))
-            .replace('M', month)
-            .replace('DD', day.toString().padStart(2, '0'))
-            .replace('D', day);
+        let result = format
+            .replace(/YYYY/g, year)
+            .replace(/YY/g, year.slice(-2))
+            .replace(/MM/g, month.toString().padStart(2, '0'))
+            .replace(/M/g, month)
+            .replace(/DD/g, day.toString().padStart(2, '0'))
+            .replace(/D/g, day);
+            
+        return result;
     }
 
     /**
@@ -619,88 +935,39 @@ class PDatepicker {
      * @param {Date} date Gregorian date
      * @returns {object} Jalali date object {year, month, day}
      */
+    
     getJalaliDate(date) {
         // Proper implementation for converting Gregorian to Jalali
-        const gregorianYear = date.getFullYear();
-        const gregorianMonth = date.getMonth() + 1;
-        const gregorianDay = date.getDate();
-        
-        // Convert to Jalali
-        let jalaliYear, jalaliMonth, jalaliDay;
-        
-        // Constants for conversion
-        const breaks = [
-            -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181,
-            1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456
-        ];
-        
-        // Helper function to determine if Gregorian year is leap
-        const isGregorianLeap = (year) => {
-            return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
-        };
-        
-        // Helper function to determine if Jalali year is leap
-        const isJalaliLeap = (year) => {
-            const mod = year % 33;
-            return mod === 1 || mod === 5 || mod === 9 || mod === 13 || mod === 17 || mod === 22 || mod === 26 || mod === 30;
-        };
-        
-        // Convert date
-        let gYear = gregorianYear;
-        let gMonth = gregorianMonth - 1;
-        let gDay = gregorianDay;
-        let gy = gYear;
-        
-        if (gYear > 1600) {
-            const jy = 979;
-            gYear -= 1600;
+        const gy = date.getFullYear();
+        const gm = date.getMonth() + 1;
+        const gd = date.getDate();
+        var g_d_m, jy, jm, jd, gy2, days;
+        g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+        gy2 = (gm > 2) ? (gy + 1) : gy;
+        days = 355666 + (365 * gy) + ~~((gy2 + 3) / 4) - ~~((gy2 + 99) / 100) + ~~((gy2 + 399) / 400) + gd + g_d_m[gm - 1];
+        jy = -1595 + (33 * ~~(days / 12053));
+        days %= 12053;
+        jy += 4 * ~~(days / 1461);
+        days %= 1461;
+        if (days > 365) {
+        jy += ~~((days - 1) / 365);
+        days = (days - 1) % 365;
+        }
+        if (days < 186) {
+        jm = 1 + ~~(days / 31);
+        jd = 1 + (days % 31);
         } else {
-            const jy = 0;
-            gYear -= 621;
+        jm = 7 + ~~((days - 186) / 30);
+        jd = 1 + ((days - 186) % 30);
         }
-        
-        const gDaysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        let jDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
-        
-        // Adjust for leap years
-        if (isGregorianLeap(gy) || (gy + 1600) === 2000) {
-            gDaysInMonth[1] = 29;
-        }
-        
-        // Find day of year for Gregorian date
-        let gDayOfYear = gDay;
-        for (let i = 0; i < gMonth; i++) {
-            gDayOfYear += gDaysInMonth[i];
-        }
-        
-        // Find Jalali year
-        let jDayOfYear;
-        let jYear = gYear - 621;
-        const jMonthDay = isJalaliLeap(jYear) ? 366 : 365;
-        
-        if (gDayOfYear <= 286) {
-            jDayOfYear = gDayOfYear + 79;
-        } else {
-            jDayOfYear = gDayOfYear - 286;
-            jYear += 1;
-        }
-        
-        // Find Jalali month and day
-        let i;
-        for (i = 0; i < 11 && jDayOfYear > jDaysInMonth[i]; i++) {
-            jDayOfYear -= jDaysInMonth[i];
-        }
-        
-        const jMonth = i + 1;
-        const jDay = jDayOfYear;
-        
+        // alert(jy + ' ' + jm + ' ' + jd);
         return {
-            year: jYear,
-            month: jMonth,
-            day: jDay
+            year: jy,
+            month: jm,
+            day: jd
         };
     }
-
+  
     /**
      * Get days for Jalali month calendar view
      * 
@@ -710,6 +977,24 @@ class PDatepicker {
      */
     getJalaliMonthDays(year, month) {
         const days = [];
+        
+        // Ensure this.today is defined before accessing it
+        if (!this.today) {
+            // Try to set proper Jalali date
+            try {
+                const now = new Date();
+                const jalaliDate = this.getJalaliDate(now);
+                if (jalaliDate && typeof jalaliDate.year !== 'undefined') {
+                    this.today = jalaliDate;
+                } else {
+                    // This is a fallback, but should not happen with the current getJalaliDate implementation
+                    this.today = this.getJalaliDate(new Date());
+                }
+            } catch (error) {
+                console.warn('PDatepicker: Error getting Jalali date for today, using fallback');
+                this.today = this.getJalaliDate(new Date());
+            }
+        }
         
         // Get days in current month (31 for months 1-6, 30 for months 7-11, 29/30 for month 12)
         let daysInMonth;
@@ -817,6 +1102,15 @@ class PDatepicker {
         const daysInMonth = new Date(year, month, 0).getDate();
         const startDay = date.getDay();
         
+        // Ensure this.today is defined before accessing it
+        if (!this.today) {
+            this.today = {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth() + 1,
+                day: new Date().getDate()
+            };
+        }
+        
         // Get previous month's last days
         const prevMonth = month === 1 ? 12 : month - 1;
         const prevYear = month === 1 ? year - 1 : year;
@@ -863,5 +1157,209 @@ class PDatepicker {
         }
         
         return days;
+    }
+
+    /**
+     * Initialize time picker functionality
+     */
+    initializeTimePicker() {
+        if (!this.options.timePicker) return;
+        
+        // Get time elements
+        const hoursUpBtn = this.timePicker.querySelector('.pdatepicker-time-hours .pdatepicker-time-up');
+        const hoursDownBtn = this.timePicker.querySelector('.pdatepicker-time-hours .pdatepicker-time-down');
+        const hoursValue = this.timePicker.querySelector('.pdatepicker-time-hours .pdatepicker-time-value');
+        
+        const minutesUpBtn = this.timePicker.querySelector('.pdatepicker-time-minutes .pdatepicker-time-up');
+        const minutesDownBtn = this.timePicker.querySelector('.pdatepicker-time-minutes .pdatepicker-time-down');
+        const minutesValue = this.timePicker.querySelector('.pdatepicker-time-minutes .pdatepicker-time-value');
+        
+        const secondsUpBtn = this.timePicker.querySelector('.pdatepicker-time-seconds .pdatepicker-time-up');
+        const secondsDownBtn = this.timePicker.querySelector('.pdatepicker-time-seconds .pdatepicker-time-down');
+        const secondsValue = this.timePicker.querySelector('.pdatepicker-time-seconds .pdatepicker-time-value');
+        
+        // Initialize time values
+        const now = new Date();
+        if (!this.currentViewDate.hours) {
+            this.currentViewDate.hours = now.getHours();
+        }
+        if (!this.currentViewDate.minutes) {
+            this.currentViewDate.minutes = now.getMinutes();
+        }
+        if (!this.currentViewDate.seconds) {
+            this.currentViewDate.seconds = now.getSeconds();
+        }
+        
+        // Update display
+        this.updateTimePickerDisplay();
+        
+        // Hours up button
+        hoursUpBtn.addEventListener('click', () => {
+            this.currentViewDate.hours = (this.currentViewDate.hours + 1) % 24;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+        
+        // Hours down button
+        hoursDownBtn.addEventListener('click', () => {
+            this.currentViewDate.hours = (this.currentViewDate.hours - 1 + 24) % 24;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+        
+        // Minutes up button
+        minutesUpBtn.addEventListener('click', () => {
+            this.currentViewDate.minutes = (this.currentViewDate.minutes + 1) % 60;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+        
+        // Minutes down button
+        minutesDownBtn.addEventListener('click', () => {
+            this.currentViewDate.minutes = (this.currentViewDate.minutes - 1 + 60) % 60;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+        
+        // Seconds up button
+        secondsUpBtn.addEventListener('click', () => {
+            this.currentViewDate.seconds = (this.currentViewDate.seconds + 1) % 60;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+        
+        // Seconds down button
+        secondsDownBtn.addEventListener('click', () => {
+            this.currentViewDate.seconds = (this.currentViewDate.seconds - 1 + 60) % 60;
+            this.updateTimePickerDisplay();
+            this.updateTimeInInput();
+        });
+    }
+    
+    /**
+     * Update time picker display
+     */
+    updateTimePickerDisplay() {
+        if (!this.options.timePicker) return;
+        
+        const hoursValue = this.timePicker.querySelector('.pdatepicker-time-hours .pdatepicker-time-value');
+        const minutesValue = this.timePicker.querySelector('.pdatepicker-time-minutes .pdatepicker-time-value');
+        const secondsValue = this.timePicker.querySelector('.pdatepicker-time-seconds .pdatepicker-time-value');
+        
+        // Format hours, minutes, and seconds with leading zeros
+        hoursValue.textContent = this.currentViewDate.hours.toString().padStart(2, '0');
+        minutesValue.textContent = this.currentViewDate.minutes.toString().padStart(2, '0');
+        secondsValue.textContent = this.currentViewDate.seconds.toString().padStart(2, '0');
+    }
+    
+    /**
+     * Update time in input field
+     */
+    updateTimeInInput() {
+        if (!this.input.value) return;
+        
+        // Format the date part using the specified format
+        const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+        let formattedDate = this.formatDate(dateStr, this.options.format);
+        
+        // Format time according to timeFormat option
+        const timeStr = this.formatTime(
+            this.currentViewDate.hours,
+            this.currentViewDate.minutes,
+            this.currentViewDate.seconds,
+            this.options.timeFormat
+        );
+        
+        // Update input value with formatted date and time
+        this.input.value = `${formattedDate} ${timeStr}`;
+        
+        // Update alt field if specified
+        if (this.options.altField) {
+            const altField = document.querySelector(this.options.altField);
+            if (altField) {
+                const altFormat = this.options.altFormat || this.options.format;
+                let altFormattedDate = this.formatDate(dateStr, altFormat);
+                altField.value = `${altFormattedDate} ${timeStr}`;
+            }
+        }
+        
+        // Call onSelect callback
+        if (typeof this.options.onSelect === 'function') {
+            this.options.onSelect(this.input.value, dateStr);
+        }
+    }
+
+    /**
+     * Update datepicker styles
+     * 
+     * @param {object} customStyles New custom styles to apply
+     */
+    updateStyles(customStyles) {
+        // Update the options
+        this.options.customStyles = { ...this.options.customStyles, ...customStyles };
+        
+        // Apply the updated styles
+        this.applyCustomStyles();
+        
+        // Re-render the current view to ensure all elements have updated styles
+        this.refreshView();
+    }
+    
+    /**
+     * Refresh the current view
+     */
+    refreshView() {
+        switch (this.options.viewMode) {
+            case 'day':
+                this.renderDaysView();
+                break;
+            case 'month':
+                this.renderMonthsView();
+                break;
+            case 'year':
+                this.renderYearsView();
+                break;
+            default:
+                this.renderDaysView();
+        }
+        
+        if (this.options.timePicker) {
+            this.updateTimePickerDisplay();
+        }
+    }
+    
+    /**
+     * Add additional styles to elements during rendering
+     * 
+     * @param {string} elementType Type of element being rendered (day, weekday, month, year, etc.)
+     * @param {HTMLElement} element The DOM element
+     */
+    applyDynamicStyles(elementType, element) {
+        const customStyles = this.options.customStyles;
+        if (!customStyles) return;
+        
+        switch (elementType) {
+            case 'day':
+                if (customStyles.day) {
+                    this.applyStyles(element, customStyles.day);
+                }
+                break;
+            case 'weekday':
+                if (customStyles.weekday) {
+                    this.applyStyles(element, customStyles.weekday);
+                }
+                break;
+            case 'month':
+                if (customStyles.month) {
+                    this.applyStyles(element, customStyles.month);
+                }
+                break;
+            case 'year':
+                if (customStyles.year) {
+                    this.applyStyles(element, customStyles.year);
+                }
+                break;
+            // Additional element types can be added here
+        }
     }
 }

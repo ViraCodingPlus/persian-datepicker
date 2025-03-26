@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDatepicker Test</title>
+    <link rel="stylesheet" href="src/resources/css/pdatepicker.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #666;
+            margin-top: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        .theme-selector {
+            margin-bottom: 20px;
+        }
+        .theme-selector button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: #f8f8f8;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .theme-selector button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDatepicker Test</h1>
+        
+        <div class="theme-selector">
+            <button data-theme="default">Default Theme</button>
+            <button data-theme="dark">Dark Theme</button>
+            <button data-theme="blue">Blue Theme</button>
+        </div>
+        
+        <h2>Basic Datepickers</h2>
+        
+        <div class="form-group">
+            <label for="date1">Persian Calendar:</label>
+            <input type="text" id="date1" placeholder="Select date">
+        </div>
+        
+        <div class="form-group">
+            <label for="date2">English Calendar:</label>
+            <input type="text" id="date2" placeholder="Select date">
+        </div>
+        
+        <h2>Datepickers with Time</h2>
+        
+        <div class="form-group">
+            <label for="date3">Persian Calendar with Time:</label>
+            <input type="text" id="date3" placeholder="Select date and time">
+        </div>
+        
+        <div class="form-group">
+            <label for="date4">English Calendar with Time:</label>
+            <input type="text" id="date4" placeholder="Select date and time">
+        </div>
+        
+        <div class="form-group">
+            <label for="date5">Persian Calendar with Custom Format:</label>
+            <input type="text" id="date5" placeholder="Select date with custom format">
+        </div>
+    </div>
+    
+    <script src="src/resources/js/pdatepicker.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize datepickers
+            const datepicker1 = new PDatepicker('#date1', {
+                language: 'fa',
+                format: 'YYYY/MM/DD'
+            });
+            
+            const datepicker2 = new PDatepicker('#date2', {
+                language: 'en',
+                rtl: false,
+                format: 'YYYY/MM/DD'
+            });
+            
+            const datepicker3 = new PDatepicker('#date3', {
+                language: 'fa',
+                format: 'YYYY/MM/DD',
+                timePicker: true
+            });
+            
+            const datepicker4 = new PDatepicker('#date4', {
+                language: 'en',
+                rtl: false,
+                format: 'YYYY/MM/DD',
+                timePicker: true
+            });
+            
+            const datepicker5 = new PDatepicker('#date5', {
+                language: 'fa',
+                format: 'YY-MM-DD',
+                timePicker: true
+            });
+            
+            // Theme switcher
+            const themeButtons = document.querySelectorAll('.theme-selector button');
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const theme = this.getAttribute('data-theme');
+                    
+                    // Update all datepickers with new theme
+                    [datepicker1, datepicker2, datepicker3, datepicker4, datepicker5].forEach(picker => {
+                        picker.container.className = picker.container.className.replace(/pdatepicker-theme-\w+/, `pdatepicker-theme-${theme}`);
+                        picker.options.theme = theme;
+                    });
+                });
+            });
+            
+            console.log('All datepickers initialized');
+        });
+    </script>
+</body>
+</html> 
