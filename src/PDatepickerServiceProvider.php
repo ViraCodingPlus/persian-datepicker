@@ -46,11 +46,17 @@ class PDatepickerServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/resources/js' => public_path('vendor/pdatepicker/js'),
             __DIR__ . '/resources/css' => public_path('vendor/pdatepicker/css'),
+            __DIR__ . '/resources/examples' => public_path('vendor/pdatepicker/examples'),
         ], 'pdatepicker-assets');
 
         // Publish views
         $this->publishes([
             __DIR__ . '/resources/views' => resource_path('views/vendor/pdatepicker'),
         ], 'pdatepicker-views');
+        
+        // Publish examples separately if needed
+        $this->publishes([
+            __DIR__ . '/resources/examples' => public_path('vendor/pdatepicker/examples'),
+        ], 'pdatepicker-examples');
     }
 } 
