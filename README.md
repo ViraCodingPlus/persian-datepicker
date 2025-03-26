@@ -94,6 +94,25 @@ $now = PDatepicker::now();
 </script>
 ```
 
+## Examples
+
+The package includes several complete HTML examples to demonstrate different usage scenarios:
+
+- **Basic Examples**: Shows simple datepicker initialization with various options
+- **Advanced Examples**: Demonstrates integration with forms, date ranges, and validation
+
+After publishing the assets, you can find these examples at:
+
+```
+public/vendor/pdatepicker/examples/
+```
+
+Or you can view them directly in the source code at:
+
+```
+vendor/pdatepicker/persian-datepicker/src/resources/examples/
+```
+
 ## Configuration Options
 
 You can configure the datepicker by editing the `config/pdatepicker.php` file:
