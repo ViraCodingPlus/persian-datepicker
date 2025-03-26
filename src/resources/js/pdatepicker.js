@@ -213,11 +213,48 @@ class PDatepicker {
             this.currentViewDate = { year: 1402, month: 1, day: 1 };
         }
         
-        const year = this.currentViewDate.year;
-        const month = this.currentViewDate.month;
+        // Safety check for dayNames
+        if (!this.dayNames || !Array.isArray(this.dayNames) || this.dayNames.length !== 7) {
+            console.warn('PDatepicker: dayNames is undefined or invalid, initializing with defaults');
+            if (this.options.language === 'fa') {
+                this.dayNames = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+            } else {
+                this.dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            }
+        }
         
-        // Update title
-        this.title.textContent = `${this.monthNames[month - 1]} ${year}`;
+        // Safety check for monthNames
+        if (!this.monthNames || !Array.isArray(this.monthNames) || this.monthNames.length === 0) {
+            console.warn('PDatepicker: monthNames is undefined or empty, initializing with defaults');
+            if (this.options.language === 'fa') {
+                this.monthNames = [
+                    'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                    'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+                ];
+            } else {
+                this.monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+            }
+        }
+        
+        // Safety check for month index bounds
+        const month = this.currentViewDate.month;
+        const year = this.currentViewDate.year;
+        const monthIndex = month - 1;
+        
+        // Ensure month index is valid
+        if (monthIndex < 0 || monthIndex >= this.monthNames.length) {
+            console.warn(`PDatepicker: Invalid month index ${monthIndex}, using fallback`);
+            this.currentViewDate.month = 1;
+            const fallbackMonthName = this.options.language === 'fa' ? 'فروردین' : 'January';
+            this.title.textContent = `${fallbackMonthName} ${year}`;
+        } else {
+            // Update title
+            this.title.textContent = `${this.monthNames[monthIndex]} ${year}`;
+        }
+        
         this.title.dataset.year = year;
         this.title.dataset.month = month;
         
@@ -233,7 +270,8 @@ class PDatepicker {
         let html = '<div class="pdatepicker-days">';
         html += '<div class="pdatepicker-week-days">';
         for (let i = 0; i < 7; i++) {
-            html += `<div class="pdatepicker-week-day">${this.dayNames[i]}</div>`;
+            const dayName = i < this.dayNames.length ? this.dayNames[i] : `D${i}`;
+            html += `<div class="pdatepicker-week-day">${dayName}</div>`;
         }
         html += '</div>';
         
@@ -274,6 +312,22 @@ class PDatepicker {
             this.currentViewDate = { year: 1402, month: 1, day: 1 };
         }
         
+        // Safety check for monthNames
+        if (!this.monthNames || !Array.isArray(this.monthNames) || this.monthNames.length === 0) {
+            console.warn('PDatepicker: monthNames is undefined or empty, initializing with defaults');
+            if (this.options.language === 'fa') {
+                this.monthNames = [
+                    'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                    'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+                ];
+            } else {
+                this.monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+            }
+        }
+        
         const year = this.currentViewDate.year;
         
         // Update title
@@ -288,7 +342,9 @@ class PDatepicker {
                 classes.push('pdatepicker-month-selected');
             }
             
-            html += `<div class="${classes.join(' ')}" data-month="${i + 1}">${this.monthNames[i]}</div>`;
+            // Safety check for month index bounds
+            const monthName = i < this.monthNames.length ? this.monthNames[i] : `Month ${i+1}`;
+            html += `<div class="${classes.join(' ')}" data-month="${i + 1}">${monthName}</div>`;
         }
         html += '</div>';
         
