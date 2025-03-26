@@ -61,6 +61,37 @@ The simplest way to use the datepicker is with the Blade directive:
 ])
 ```
 
+### Different Calendar Types
+
+You can create different calendar types for different selection needs:
+
+#### Year Picker
+
+```blade
+@pdatepicker('year-field', null, [
+    'type' => 'year',
+    'format' => 'YYYY'
+])
+```
+
+#### Month Picker
+
+```blade
+@pdatepicker('month-field', null, [
+    'type' => 'month',
+    'format' => 'YYYY/MM'
+])
+```
+
+#### Date Picker (Default)
+
+```blade
+@pdatepicker('date-field', null, [
+    'type' => 'date',
+    'format' => 'YYYY/MM/DD'
+])
+```
+
 ### Using the Facade
 
 ```php
@@ -139,6 +170,8 @@ return [
 | `language` | string | 'fa' | Language ('fa', 'en') |
 | `autoClose` | boolean | true | Close datepicker after selecting a date |
 | `timePicker` | boolean | false | Show time picker |
+| `timeFormat` | string | 'HH:mm:ss' | Format for time display |
+| `type` | string | 'date' | Calendar type ('date', 'month', 'year') |
 | `viewMode` | string | 'day' | Initial view mode ('day', 'month', 'year') |
 | `minDate` | string | null | Minimum selectable date |
 | `maxDate` | string | null | Maximum selectable date |
@@ -149,6 +182,7 @@ return [
 | `onSelect` | function | null | Callback when a date is selected |
 | `onShow` | function | null | Callback when datepicker is shown |
 | `onHide` | function | null | Callback when datepicker is hidden |
+| `customStyles` | object | {} | Custom CSS styles for datepicker elements |
 
 ## Methods
 

@@ -24,6 +24,7 @@ class PDatepicker {
             timePicker: false,
             timeFormat: 'HH:mm:ss', // Format for time display
             viewMode: 'day',
+            type: 'date', // New option: 'date', 'month', or 'year'
             minDate: null,
             maxDate: null,
             initialValue: null,
@@ -40,10 +41,58 @@ class PDatepicker {
         this.options = { ...this.defaults, ...options };
 
         // Find the input element
-        this.input = typeof selector === 'string' ? document.querySelector(selector) : selector;
+        if (typeof selector === 'string') {
+            // If selector starts with ., #, or [, it's a CSS selector
+            if (selector.match(/^[\.#\[]/)) {
+                this.input = document.querySelector(selector);
+            } else {
+                // Otherwise, treat it as a class name selector by default
+                this.input = document.querySelector('.' + selector);
+                // If not found with class, try as an ID
+                if (!this.input) {
+                    this.input = document.querySelector('#' + selector);
+                }
+                // If still not found, try as a name attribute
+                if (!this.input) {
+                    this.input = document.querySelector(`[name="${selector}"]`);
+                }
+            }
+        } else if (selector instanceof HTMLElement) {
+            // If selector is an HTMLElement
+            this.input = selector;
+        } else if (selector && typeof selector === 'object' && 'selector' in selector) {
+            // Handle the case where options are passed as first argument
+            const selectorStr = selector.selector;
+            // Use the selector from the object
+            if (typeof selectorStr === 'string') {
+                if (selectorStr.match(/^[\.#\[]/)) {
+                    this.input = document.querySelector(selectorStr);
+                } else {
+                    this.input = document.querySelector('.' + selectorStr);
+                    if (!this.input) {
+                        this.input = document.querySelector('#' + selectorStr);
+                    }
+                    if (!this.input) {
+                        this.input = document.querySelector(`[name="${selectorStr}"]`);
+                    }
+                }
+            }
+            // Merge remaining object properties as options
+            this.options = { ...this.options, ...selector };
+        }
+
         if (!this.input) {
-            console.error('PDatepicker: Input element not found!');
+            console.error('PDatepicker: Input element not found for selector:', selector);
             return;
+        }
+
+        // Set viewMode based on type option
+        if (this.options.type === 'year') {
+            this.options.viewMode = 'year';
+        } else if (this.options.type === 'month') {
+            this.options.viewMode = 'month';
+        } else {
+            // For 'date' type or any other value, use the viewMode from options
         }
 
         // Create datepicker container
@@ -60,9 +109,23 @@ class PDatepicker {
         // Attach event listeners
         this.attachEventListeners();
 
-        // Set initial value if provided
+        // Store initial input value (if already present)
+        const initialInputValue = this.input.value ? this.input.value.trim() : null;
+
+        // Set initial value with priority:
+        // 1. Use options.initialValue if provided
+        // 2. Use the input's existing value if present
+        // 3. Leave empty otherwise
         if (this.options.initialValue) {
-            this.setDate(this.options.initialValue);
+            // Small delay to ensure all initialization is complete
+            setTimeout(() => {
+                this.setDate(this.options.initialValue);
+            }, 0);
+        } else if (initialInputValue) {
+            // Try to use existing value in input field if present
+            setTimeout(() => {
+                this.setDate(initialInputValue);
+            }, 0);
         }
     }
 
@@ -156,6 +219,8 @@ class PDatepicker {
         if (this.options.rtl) {
             this.container.classList.add('pdatepicker-rtl');
         }
+        // Add class based on the type option
+        this.container.classList.add(`pdatepicker-type-${this.options.type}`);
         this.container.style.display = 'none';
         
         // Create header
@@ -218,12 +283,19 @@ class PDatepicker {
         this.todayBtn = document.createElement('button');
         this.todayBtn.className = 'pdatepicker-today-btn';
         this.todayBtn.textContent = this.options.language === 'fa' ? 'امروز' : 'Today';
+        
+        // Hide today button for year and month types if not needed
+        if (this.options.type !== 'date') {
+            // For year and month types, rename the today button
+            this.todayBtn.textContent = this.options.language === 'fa' ? 'حال حاضر' : 'Current';
+        }
+        
         this.footer.appendChild(this.todayBtn);
         
         // Append all elements to container
         this.container.appendChild(this.header);
         this.container.appendChild(this.body);
-        if (this.options.timePicker) {
+        if (this.options.timePicker && this.options.type === 'date') {
             this.container.appendChild(this.timePicker);
         }
         this.container.appendChild(this.footer);
@@ -435,7 +507,7 @@ class PDatepicker {
             this.applyDynamicStyles('day', dayEl);
             
             if (!dayEl.classList.contains('pdatepicker-day-disabled')) {
-                dayEl.addEventListener('click', () => {
+                this.safeAddEventListener(dayEl, 'click', () => {
                     this.selectDate(dayEl.dataset.date);
                 });
             } else {
@@ -514,7 +586,7 @@ class PDatepicker {
             // Apply custom styles to month
             this.applyDynamicStyles('month', monthEl);
             
-            monthEl.addEventListener('click', () => {
+            this.safeAddEventListener(monthEl, 'click', () => {
                 // Update the currentViewDate month
                 this.currentViewDate.month = parseInt(monthEl.dataset.month);
                 
@@ -590,28 +662,39 @@ class PDatepicker {
             // Apply custom styles to year
             this.applyDynamicStyles('year', yearEl);
             
-            yearEl.addEventListener('click', () => {
+            this.safeAddEventListener(yearEl, 'click', () => {
                 // Update the currentViewDate year
                 this.currentViewDate.year = parseInt(yearEl.dataset.year);
                 
-                // Update the date with the new year
-                if (this.input.value) {
-                    // Keep the same month and day, just change the year
-                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                // Handle differently based on calendar type
+                if (this.options.type === 'year') {
+                    // For year-only picker, just set the year and select date
+                    const dateStr = `${this.currentViewDate.year}/1/1`;
                     this.selectDate(dateStr);
+                    
+                    // Stay in year view
+                    this.options.viewMode = 'year';
+                    this.renderYearsView();
                 } else {
-                    // If no date is selected yet, set the first day of the selected year/month
-                    // Make sure the day is set
-                    if (!this.currentViewDate.day) {
-                        this.currentViewDate.day = 1;
+                    // For date or month picker, update the date with the new year
+                    if (this.input.value) {
+                        // Keep the same month and day, just change the year
+                        const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                        this.selectDate(dateStr);
+                    } else {
+                        // If no date is selected yet, set the first day of the selected year/month
+                        // Make sure the day is set
+                        if (!this.currentViewDate.day) {
+                            this.currentViewDate.day = 1;
+                        }
+                        
+                        const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
+                        this.selectDate(dateStr);
                     }
                     
-                    const dateStr = `${this.currentViewDate.year}/${this.currentViewDate.month}/${this.currentViewDate.day}`;
-                    this.selectDate(dateStr);
+                    // Switch to months view for non-year types
+                    this.renderMonthsView();
                 }
-                
-                // Switch to months view
-                this.renderMonthsView();
             });
             
             yearsContainer.appendChild(yearEl);
@@ -621,47 +704,112 @@ class PDatepicker {
     }
 
     /**
+     * Helper method to safely add event listeners with fallback for older browsers
+     * 
+     * @param {HTMLElement} element The element to attach the event to
+     * @param {string} event The event name
+     * @param {Function} handler The event handler function
+     * @returns {boolean} Whether the event was successfully attached
+     */
+    safeAddEventListener(element, event, handler) {
+        if (!element) return false;
+        
+        try {
+            if (element.addEventListener) {
+                element.addEventListener(event, handler);
+                return true;
+            } else if (element.attachEvent) {
+                // For old IE versions
+                element.attachEvent('on' + event, handler);
+                return true;
+            } else if (typeof element['on' + event] === 'function') {
+                // Fallback to on-attribute
+                const oldHandler = element['on' + event];
+                element['on' + event] = function() {
+                    oldHandler();
+                    handler();
+                };
+                return true;
+            } else {
+                element['on' + event] = handler;
+                return true;
+            }
+        } catch (error) {
+            console.warn(`PDatepicker: Error attaching ${event} event to element:`, error);
+            return false;
+        }
+    }
+    
+    /**
      * Attach event listeners to UI elements
      */
     attachEventListeners() {
+        // Check if input is valid and has addEventListener method
+        if (!this.input) {
+            console.error('PDatepicker: Cannot attach event listeners - input element is undefined');
+            return;
+        }
+
         // Input click event
-        this.input.addEventListener('click', () => {
+        this.safeAddEventListener(this.input, 'click', () => {
             this.show();
         });
         
         // Input focus event
-        this.input.addEventListener('focus', () => {
+        this.safeAddEventListener(this.input, 'focus', () => {
             this.show();
         });
         
         // Document click event to hide datepicker when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.container.contains(e.target) && e.target !== this.input) {
+        this.safeAddEventListener(document, 'click', (e) => {
+            if (this.container && !this.container.contains(e.target) && e.target !== this.input) {
                 this.hide();
             }
         });
         
         // Previous button click
-        this.prevBtn.addEventListener('click', () => {
+        this.safeAddEventListener(this.prevBtn, 'click', () => {
             this.navigatePrev();
         });
         
         // Next button click
-        this.nextBtn.addEventListener('click', () => {
+        this.safeAddEventListener(this.nextBtn, 'click', () => {
             this.navigateNext();
         });
         
-        // Title click for changing view
-        this.title.addEventListener('click', () => {
-            if (this.options.viewMode === 'day') {
-                this.renderMonthsView();
-            } else if (this.options.viewMode === 'month') {
+        // Title click for changing view - based on type option
+        this.safeAddEventListener(this.title, 'click', () => {
+            // For year-only type, don't allow changing view mode
+            if (this.options.type === 'year') {
+                // Ensure we stay in year view
+                this.options.viewMode = 'year';
                 this.renderYearsView();
+                return;
+            }
+            
+            // For month-only type, only allow month -> year view
+            else if (this.options.type === 'month') {
+                if (this.options.viewMode === 'month') {
+                    this.renderYearsView();
+                } else if (this.options.viewMode === 'year') {
+                    // When in year view, clicking title again should do nothing
+                    // for month-type picker, or go back to month view
+                    this.renderYearsView(); // Stay in year view
+                }
+            }
+            
+            // For date type, allow cycling through day, month, year views
+            else if (this.options.type === 'date') {
+                if (this.options.viewMode === 'day') {
+                    this.renderMonthsView();
+                } else if (this.options.viewMode === 'month') {
+                    this.renderYearsView();
+                }
             }
         });
         
         // Today button click
-        this.todayBtn.addEventListener('click', () => {
+        this.safeAddEventListener(this.todayBtn, 'click', () => {
             // Ensure this.today is defined
             if (!this.today) {
                 if (this.options.language === 'fa') {
@@ -686,8 +834,33 @@ class PDatepicker {
             }
             
             this.currentViewDate = { ...this.today };
-            this.renderDaysView();
-            this.selectDate(`${this.today.year}/${this.today.month}/${this.today.day}`);
+            
+            // Handle different picker types
+            switch (this.options.type) {
+                case 'year':
+                    // For year picker, only set the year
+                    if (this.input.value) {
+                        this.selectDate(`${this.today.year}/1/1`);
+                    }
+                    this.renderYearsView();
+                    break;
+                    
+                case 'month':
+                    // For month picker, set year and month
+                    if (this.input.value) {
+                        this.selectDate(`${this.today.year}/${this.today.month}/1`);
+                    }
+                    this.renderMonthsView();
+                    break;
+                    
+                case 'date':
+                default:
+                    // For date picker, set the full date
+                    this.renderDaysView();
+                    this.selectDate(`${this.today.year}/${this.today.month}/${this.today.day}`);
+                    break;
+            }
+            
             if (this.options.autoClose) {
                 this.hide();
             }
@@ -752,6 +925,21 @@ class PDatepicker {
             this.container.style.left = `${inputRect.left + window.scrollX}px`;
         }
         
+        // Ensure correct view mode based on calendar type
+        if (this.options.type === 'year') {
+            this.options.viewMode = 'year';
+            this.renderYearsView();
+        } else if (this.options.type === 'month') {
+            this.options.viewMode = 'month';
+            this.renderMonthsView();
+        } else if (this.options.viewMode === 'day') {
+            this.renderDaysView();
+        } else if (this.options.viewMode === 'month') {
+            this.renderMonthsView();
+        } else if (this.options.viewMode === 'year') {
+            this.renderYearsView();
+        }
+        
         // Call onShow callback
         if (typeof this.options.onShow === 'function') {
             this.options.onShow();
@@ -814,10 +1002,55 @@ class PDatepicker {
      * @param {string} date Date in format YYYY/MM/DD
      */
     selectDate(date) {
-        const parts = date.split('/');
-        const year = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        const day = parseInt(parts[2]);
+        // Check if date is in valid format
+        if (!date || typeof date !== 'string') {
+            console.error('PDatepicker: Invalid date format provided to selectDate', date);
+            return;
+        }
+
+        // Parse the date considering different possible formats
+        let year, month, day;
+        
+        // Try to match against YYYY/MM/DD format first
+        const standardPattern = /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/;
+        const standardMatch = date.match(standardPattern);
+        
+        if (standardMatch) {
+            year = parseInt(standardMatch[1]);
+            month = parseInt(standardMatch[2]);
+            day = parseInt(standardMatch[3]);
+        } else {
+            // Try alternative formats like YY/MM/DD
+            const shortYearPattern = /^(\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})$/;
+            const shortYearMatch = date.match(shortYearPattern);
+            
+            if (shortYearMatch) {
+                // Assume 20xx for two-digit year
+                year = 1300 + parseInt(shortYearMatch[1]);
+                month = parseInt(shortYearMatch[2]);
+                day = parseInt(shortYearMatch[3]);
+            } else {
+                // Split by common separators as last attempt
+                const parts = date.split(/[\/\-]/);
+                if (parts.length === 3) {
+                    year = parseInt(parts[0]);
+                    month = parseInt(parts[1]);
+                    day = parseInt(parts[2]);
+                } else {
+                    console.error('PDatepicker: Could not parse date', date);
+                    return;
+                }
+            }
+        }
+        
+        // Validate parsed values
+        if (isNaN(year) || isNaN(month) || isNaN(day) ||
+            year < 1200 || year > 2200 || // Reasonable range for Jalali years
+            month < 1 || month > 12 ||
+            day < 1 || day > 31) {
+            console.error('PDatepicker: Invalid date values', { year, month, day });
+            return;
+        }
         
         this.currentViewDate.year = year;
         this.currentViewDate.month = month;
@@ -832,11 +1065,33 @@ class PDatepicker {
             this.updateTimePickerDisplay();
         }
         
-        // Format date according to options
-        let formattedDate = this.formatDate(date, this.options.format);
+        // Normalize the date string for formatting
+        const normalizedDate = `${year}/${month}/${day}`;
         
-        // Add time if timePicker is enabled
-        if (this.options.timePicker) {
+        // Format date according to options and calendar type
+        let formattedDate;
+        
+        // Handle different calendar types
+        switch (this.options.type) {
+            case 'year':
+                // For year picker, only use the year part
+                formattedDate = year.toString();
+                break;
+                
+            case 'month':
+                // For month picker, use year and month parts
+                formattedDate = this.formatDate(`${year}/${month}/1`, this.options.format.replace(/D{1,2}/g, ''));
+                break;
+                
+            case 'date':
+            default:
+                // For date picker, use the full date
+                formattedDate = this.formatDate(normalizedDate, this.options.format);
+                break;
+        }
+        
+        // Add time if timePicker is enabled and not year or month type
+        if (this.options.timePicker && this.options.type === 'date') {
             // Format time according to timeFormat option
             const timeStr = this.formatTime(
                 this.currentViewDate.hours,
@@ -857,10 +1112,29 @@ class PDatepicker {
             const altField = document.querySelector(this.options.altField);
             if (altField) {
                 const altFormat = this.options.altFormat || this.options.format;
-                let altFormattedDate = this.formatDate(date, altFormat);
                 
-                // Add time if timePicker is enabled
-                if (this.options.timePicker) {
+                // Format alt field based on calendar type
+                let altFormattedDate;
+                switch (this.options.type) {
+                    case 'year':
+                        // For year picker, only use the year part
+                        altFormattedDate = year.toString();
+                        break;
+                        
+                    case 'month':
+                        // For month picker, use year and month parts
+                        altFormattedDate = this.formatDate(`${year}/${month}/1`, altFormat.replace(/D{1,2}/g, ''));
+                        break;
+                        
+                    case 'date':
+                    default:
+                        // For date picker, use the full date
+                        altFormattedDate = this.formatDate(normalizedDate, altFormat);
+                        break;
+                }
+                
+                // Add time if timePicker is enabled and not year or month type
+                if (this.options.timePicker && this.options.type === 'date') {
                     // Format time according to timeFormat option
                     const timeStr = this.formatTime(
                         this.currentViewDate.hours,
@@ -877,23 +1151,44 @@ class PDatepicker {
         }
         
         // Highlight selected date
-        const dayElements = this.container.querySelectorAll('.pdatepicker-day');
-        dayElements.forEach(day => {
-            day.classList.remove('pdatepicker-day-selected');
-            if (day.dataset.date === date) {
-                day.classList.add('pdatepicker-day-selected');
-            }
-        });
+        if (this.options.type === 'date') {
+            const dayElements = this.container.querySelectorAll('.pdatepicker-day');
+            dayElements.forEach(day => {
+                day.classList.remove('pdatepicker-day-selected');
+                if (day.dataset.date === normalizedDate) {
+                    day.classList.add('pdatepicker-day-selected');
+                }
+            });
+        } else if (this.options.type === 'month') {
+            const monthElements = this.container.querySelectorAll('.pdatepicker-month');
+            monthElements.forEach(monthEl => {
+                monthEl.classList.remove('pdatepicker-month-selected');
+                if (parseInt(monthEl.dataset.month) === month) {
+                    monthEl.classList.add('pdatepicker-month-selected');
+                }
+            });
+        } else if (this.options.type === 'year') {
+            const yearElements = this.container.querySelectorAll('.pdatepicker-year');
+            yearElements.forEach(yearEl => {
+                yearEl.classList.remove('pdatepicker-year-selected');
+                if (parseInt(yearEl.dataset.year) === year) {
+                    yearEl.classList.add('pdatepicker-year-selected');
+                }
+            });
+        }
         
         // Call onSelect callback
         if (typeof this.options.onSelect === 'function') {
-            this.options.onSelect(formattedDate, date);
+            this.options.onSelect(formattedDate, normalizedDate);
         }
         
         // Auto close if enabled and time picker is not enabled
-        if (this.options.autoClose && !this.options.timePicker) {
+        if (this.options.autoClose && !(this.options.timePicker && this.options.type === 'date')) {
             this.hide();
         }
+        
+        // Refresh the calendar view to ensure the selected date is reflected
+        this.refreshView();
     }
 
     /**
@@ -902,7 +1197,33 @@ class PDatepicker {
      * @param {string} date Date to set
      */
     setDate(date) {
-        this.selectDate(date);
+        if (!date || typeof date !== 'string') {
+            console.error('PDatepicker: Invalid date format provided to setDate', date);
+            return;
+        }
+        
+        try {
+            // Update the calendar view to the month containing the date
+            const parts = date.split(/[\/\-]/);
+            if (parts.length === 3) {
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]);
+                
+                // Update current view date before selecting
+                if (!isNaN(year) && !isNaN(month) && 
+                    year >= 1200 && year <= 2200 && 
+                    month >= 1 && month <= 12) {
+                    this.currentViewDate.year = year;
+                    this.currentViewDate.month = month;
+                    this.refreshView();
+                }
+            }
+            
+            // Select the date
+            this.selectDate(date);
+        } catch (error) {
+            console.error('PDatepicker: Error setting date', error);
+        }
     }
 
     /**
@@ -913,17 +1234,41 @@ class PDatepicker {
      * @returns {string} Formatted date
      */
     formatDate(date, format) {
-        const parts = date.split('/');
+        // Check for valid inputs
+        if (!date || typeof date !== 'string' || !format || typeof format !== 'string') {
+            console.error('PDatepicker: Invalid parameters in formatDate', { date, format });
+            return date; // Return original to avoid errors
+        }
+        
+        // Split by common separators (/, -)
+        const parts = date.split(/[\/\-]/);
+        if (parts.length !== 3) {
+            console.warn('PDatepicker: Date does not have 3 parts in formatDate', date);
+            return date; // Return original to avoid errors
+        }
+        
+        // Parse components with safety checks
         const year = parts[0];
         const month = parts[1];
         const day = parts[2];
         
+        // Validate numeric values
+        if (isNaN(parseInt(year)) || isNaN(parseInt(month)) || isNaN(parseInt(day))) {
+            console.warn('PDatepicker: Non-numeric date components in formatDate', { year, month, day });
+            return date; // Return original to avoid errors
+        }
+        
+        // Pad numbers for consistent formatting
+        const paddedMonth = month.toString().padStart(2, '0');
+        const paddedDay = day.toString().padStart(2, '0');
+        
+        // Format according to pattern
         let result = format
             .replace(/YYYY/g, year)
-            .replace(/YY/g, year.slice(-2))
-            .replace(/MM/g, month.toString().padStart(2, '0'))
+            .replace(/YY/g, year.length === 4 ? year.slice(-2) : year)
+            .replace(/MM/g, paddedMonth)
             .replace(/M/g, month)
-            .replace(/DD/g, day.toString().padStart(2, '0'))
+            .replace(/DD/g, paddedDay)
             .replace(/D/g, day);
             
         return result;
@@ -1194,42 +1539,42 @@ class PDatepicker {
         this.updateTimePickerDisplay();
         
         // Hours up button
-        hoursUpBtn.addEventListener('click', () => {
+        this.safeAddEventListener(hoursUpBtn, 'click', () => {
             this.currentViewDate.hours = (this.currentViewDate.hours + 1) % 24;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();
         });
         
         // Hours down button
-        hoursDownBtn.addEventListener('click', () => {
+        this.safeAddEventListener(hoursDownBtn, 'click', () => {
             this.currentViewDate.hours = (this.currentViewDate.hours - 1 + 24) % 24;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();
         });
         
         // Minutes up button
-        minutesUpBtn.addEventListener('click', () => {
+        this.safeAddEventListener(minutesUpBtn, 'click', () => {
             this.currentViewDate.minutes = (this.currentViewDate.minutes + 1) % 60;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();
         });
         
         // Minutes down button
-        minutesDownBtn.addEventListener('click', () => {
+        this.safeAddEventListener(minutesDownBtn, 'click', () => {
             this.currentViewDate.minutes = (this.currentViewDate.minutes - 1 + 60) % 60;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();
         });
         
         // Seconds up button
-        secondsUpBtn.addEventListener('click', () => {
+        this.safeAddEventListener(secondsUpBtn, 'click', () => {
             this.currentViewDate.seconds = (this.currentViewDate.seconds + 1) % 60;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();
         });
         
         // Seconds down button
-        secondsDownBtn.addEventListener('click', () => {
+        this.safeAddEventListener(secondsDownBtn, 'click', () => {
             this.currentViewDate.seconds = (this.currentViewDate.seconds - 1 + 60) % 60;
             this.updateTimePickerDisplay();
             this.updateTimeInInput();

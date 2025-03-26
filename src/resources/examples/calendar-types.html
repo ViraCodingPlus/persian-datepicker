@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Datepicker - Calendar Types Example</title>
+    <link rel="stylesheet" href="../css/pdatepicker.css">
+    <style>
+        body {
+            font-family: "Vazir", Tahoma, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #4a6bff;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        .example-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        .example-section h2 {
+            color: #4a6bff;
+            margin-top: 0;
+        }
+        .input-container {
+            margin-bottom: 20px;
+        }
+        .input-container p {
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .code-container {
+            margin-top: 20px;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        code {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #4a6bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Persian Datepicker - Calendar Types Example</h1>
+    
+    <div class="container">
+        <!-- Year Picker Example -->
+        <div class="example-section year-picker-section">
+            <h2>Year Picker</h2>
+            <p>Calendar that only allows year selection.</p>
+            
+            <div class="input-container">
+                <p>انتخاب سال:</p>
+                <input type="text" id="year-picker" placeholder="انتخاب سال">
+            </div>
+
+            <div class="code-container">
+                <h3>Code:</h3>
+                <pre><code>
+// Year picker example
+new PDatepicker('#year-picker', {
+    type: 'year',  // Set calendar type to year
+    format: 'YYYY' // Only year format
+});
+                </code></pre>
+            </div>
+        </div>
+        
+        <!-- Month Picker Example -->
+        <div class="example-section month-picker-section">
+            <h2>Month Picker</h2>
+            <p>Calendar that only allows month and year selection.</p>
+            
+            <div class="input-container">
+                <p>انتخاب ماه:</p>
+                <input type="text" id="month-picker" placeholder="انتخاب ماه">
+            </div>
+
+            <div class="code-container">
+                <h3>Code:</h3>
+                <pre><code>
+// Month picker example
+new PDatepicker('#month-picker', {
+    type: 'month',     // Set calendar type to month
+    format: 'YYYY/MM'  // Year and month format
+});
+                </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="container">
+        <!-- Initial Value Example -->
+        <div class="example-section initial-value-section">
+            <h2>Initial Values</h2>
+            <p>Different calendar types with initial values.</p>
+            
+            <div class="input-container">
+                <p>سال با مقدار اولیه:</p>
+                <input type="text" id="year-initial" placeholder="انتخاب سال">
+            </div>
+            
+            <div class="input-container">
+                <p>ماه با مقدار اولیه:</p>
+                <input type="text" id="month-initial" placeholder="انتخاب ماه">
+            </div>
+
+            <div class="code-container">
+                <h3>Code:</h3>
+                <pre><code>
+// Year with initial value
+new PDatepicker('#year-initial', {
+    type: 'year',
+    initialValue: '1402/01/01' // Only year part is used
+});
+
+// Month with initial value
+new PDatepicker('#month-initial', {
+    type: 'month',
+    initialValue: '1402/06/01' // Year and month parts are used
+});
+                </code></pre>
+            </div>
+        </div>
+        
+        <!-- Custom Styling Example -->
+        <div class="example-section styling-section">
+            <h2>Custom Styling</h2>
+            <p>Custom styled calendar types.</p>
+            
+            <div class="input-container">
+                <p>سال با استایل سفارشی:</p>
+                <input type="text" id="year-styled" placeholder="انتخاب سال">
+            </div>
+            
+            <div class="input-container">
+                <p>ماه با استایل سفارشی:</p>
+                <input type="text" id="month-styled" placeholder="انتخاب ماه">
+            </div>
+
+            <div class="code-container">
+                <h3>Code:</h3>
+                <pre><code>
+// Styled year picker
+new PDatepicker('#year-styled', {
+    type: 'year',
+    customStyles: {
+        container: {
+            boxShadow: '0 10px 25px rgba(74, 107, 255, 0.2)',
+            borderRadius: '12px'
+        },
+        header: {
+            backgroundColor: '#4a6bff',
+            color: 'white'
+        },
+        year: {
+            padding: '12px',
+            borderRadius: '8px',
+            transition: 'all 0.2s ease'
+        }
+    }
+});
+
+// Styled month picker
+new PDatepicker('#month-styled', {
+    type: 'month',
+    customStyles: {
+        container: {
+            boxShadow: '0 10px 25px rgba(255, 82, 82, 0.2)',
+            borderRadius: '12px'
+        },
+        header: {
+            backgroundColor: '#ff5252',
+            color: 'white'
+        },
+        month: {
+            padding: '12px',
+            borderRadius: '8px',
+            transition: 'all 0.2s ease'
+        }
+    }
+});
+                </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        Initializing datepickers...
+    </div>
+
+    <script src="../js/pdatepicker.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusElement = document.getElementById('status');
+            let initialized = 0;
+            let errors = 0;
+            
+            // Helper function to ensure datepicker maintains its type
+            function ensureCorrectView(datepicker, type) {
+                // For year type, add a click handler to the input
+                if (type === 'year') {
+                    datepicker.input.addEventListener('click', function() {
+                        // Force year view mode after datepicker is shown
+                        setTimeout(function() {
+                            datepicker.options.viewMode = 'year';
+                            datepicker.renderYearsView();
+                        }, 10);
+                    });
+                }
+                // For month type, add a click handler to ensure month view
+                else if (type === 'month') {
+                    datepicker.input.addEventListener('click', function() {
+                        // Force month view mode after datepicker is shown
+                        setTimeout(function() {
+                            datepicker.options.viewMode = 'month';
+                            datepicker.renderMonthsView();
+                        }, 10);
+                    });
+                }
+            }
+            
+            // Helper function for error handling and tracking
+            function createDatepicker(selector, options) {
+                try {
+                    const element = document.querySelector(selector);
+                    if (!element) {
+                        throw new Error(`Element not found for selector: ${selector}`);
+                    }
+                    
+                    // Store the type for future reference
+                    const type = options.type || 'date';
+                    
+                    const datepicker = new PDatepicker(selector, options);
+                    
+                    // Apply additional logic to ensure the type is respected
+                    ensureCorrectView(datepicker, type);
+                    
+                    initialized++;
+                    return datepicker;
+                } catch (error) {
+                    console.error(`Error initializing datepicker for ${selector}:`, error);
+                    errors++;
+                    return null;
+                }
+            }
+            
+            // Initialize all datepickers with error handling
+            try {
+                // Year picker example
+                createDatepicker('#year-picker', {
+                    type: 'year',
+                    format: 'YYYY'
+                });
+                
+                // Month picker example
+                createDatepicker('#month-picker', {
+                    type: 'month',
+                    format: 'YYYY/MM'
+                });
+                
+                // Year with initial value
+                createDatepicker('#year-initial', {
+                    type: 'year',
+                    initialValue: '1402/01/01'
+                });
+                
+                // Month with initial value
+                createDatepicker('#month-initial', {
+                    type: 'month',
+                    initialValue: '1402/06/01'
+                });
+                
+                // Styled year picker
+                createDatepicker('#year-styled', {
+                    type: 'year',
+                    customStyles: {
+                        container: {
+                            boxShadow: '0 10px 25px rgba(74, 107, 255, 0.2)',
+                            borderRadius: '12px'
+                        },
+                        header: {
+                            backgroundColor: '#4a6bff',
+                            color: 'white'
+                        },
+                        year: {
+                            padding: '12px',
+                            borderRadius: '8px',
+                            transition: 'all 0.2s ease'
+                        }
+                    }
+                });
+                
+                // Styled month picker
+                createDatepicker('#month-styled', {
+                    type: 'month',
+                    customStyles: {
+                        container: {
+                            boxShadow: '0 10px 25px rgba(255, 82, 82, 0.2)',
+                            borderRadius: '12px'
+                        },
+                        header: {
+                            backgroundColor: '#ff5252',
+                            color: 'white'
+                        },
+                        month: {
+                            padding: '12px',
+                            borderRadius: '8px',
+                            transition: 'all 0.2s ease'
+                        }
+                    }
+                });
+                
+                // Update status
+                if (errors === 0) {
+                    statusElement.textContent = `Successfully initialized ${initialized} datepickers.`;
+                    statusElement.style.borderLeftColor = '#28a745';
+                } else {
+                    statusElement.textContent = `Initialized ${initialized} datepickers with ${errors} errors. Check console for details.`;
+                    statusElement.style.borderLeftColor = '#dc3545';
+                }
+                
+            } catch (error) {
+                console.error('Error during datepicker initialization:', error);
+                statusElement.textContent = 'Failed to initialize datepickers. Check console for details.';
+                statusElement.style.borderLeftColor = '#dc3545';
+            }
+        });
+    </script>
+</body>
+</html> 

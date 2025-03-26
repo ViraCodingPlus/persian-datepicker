@@ -130,6 +130,9 @@
 .pdatepicker-day-current {
     color: #333;
 }
+.pdatepicker-theme-dark .pdatepicker-day-current {
+    color: #fff;
+}
 
 .pdatepicker-day-other-month {
     color: #ccc;
